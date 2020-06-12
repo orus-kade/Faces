@@ -52,6 +52,7 @@ def add_person():
     else:
         return render_template("add_person.html", form=form)
 
+
 @app.route('/person/saved')
 def saved_persons():
     deleted = request.args.get('deleted', default=False, type=bool)
