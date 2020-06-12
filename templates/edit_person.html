@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Добавление человека
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Редактирование данных человека</h1>
+    {% if edited %}
+    <div class="alert alert-success" role="alert">
+        Данные сохранены!
+    </div>
+    {% endif %}
+    <form method="post">
+        <input type="text" name="first_name" id="first_name", placeholder="Введите имя", class="form-control", value="{{ person.first_name }}"><br>
+        <input type="text" name="second_name" id="second_name", placeholder="Введите фамилию", class="form-control", value="{{ person.second_name }}"><br>
+        <input type="submit" class="btn btn-success" value="Сохранить">
+    </form>
+</div>
+{% endblock %}

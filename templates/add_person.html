@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Добавление человека
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Добавление человека</h1>
+    <form method="post" enctype="multipart/form-data">
+        {{ form.first_name(class_="form-control", placeholder="Введите имя") }}<br>
+        {{ form.second_name(placeholder="Введите фамилию", class_="form-control") }}<br>
+        {{ form.photo(class="form-control-file") }}<br>
+<!--        <input type="file" name="photo" id="photo" class="form-control-file"><br>-->
+        <input type="submit" class="btn btn-success" value="Отправить">
+    </form>
+</div>
+{% endblock %}

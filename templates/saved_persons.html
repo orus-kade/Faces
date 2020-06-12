@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Сохраненные в базе люди
+{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Сохраненные в базе люди</h1>
+    {% if deleted %}
+    <div class="alert alert-success" role="alert">
+        Запись удалена!
+    </div>
+    {% endif %}
+    {% if persons|length >0 %}
+        <ul class="list-group">
+            {% for person in persons %}
+            <li class="list-group-item">
+                <p>{{ person.first_name }} {{ person.second_name }}</p>
+                <p>
+                    <a href="/person/edit/{{ person.id }}" class="btn btn-warning">Редактировать</a>
+                    <a href="/person/delete/{{ person.id }}" class="btn btn-danger">Удалить</a>
+                </p></li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Не сохранено ни одного человека</p>
+    {% endif %}
+</div>
+{% endblock %}
