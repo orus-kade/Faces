@@ -8,12 +8,19 @@
 
 <div class="container mt-5">
     <h1>Результаты</h1>
+    {% if persons|length == 0%}
+    <p>На фотограции лиц не найдено</p>
+    {% else %}
+     <ul class="list-group">
     {% for person in persons%}
-        <img src="{{ person[0] }}">
-        {{ person[1] }}
-        {{ person[2] }}
-        {{ person[3] }}
-        <br>
+         <li class="list-group-item">
+            <img src="{{ person[0] }}">
+            {{ person[1] }}
+            {{ person[2] }}
+            {{ person[3] }}
+         </li>
     {% endfor %}
+     </ul>
+    {% endif %}
 </div>
 {% endblock %}

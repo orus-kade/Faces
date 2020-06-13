@@ -91,7 +91,7 @@ def index():
                 persons.append([img, a, g, ai])
             print(len(persons))
             return render_template("result.html", persons=persons)
-        return "Лиц нет"
+        return render_template("result.html", persons=[])
     return render_template("index.html")
 
 
