@@ -1,8 +1,14 @@
-nav {
+nav#header_bar {
     background: black;
 }
 
-.text-dark {
+
+a#my_link{
     color: #89c4ff!important;
+    text-decoration: none;
+}
+
+a#my_link:hover{
+    color: #ffffff!important;
     text-decoration: none;
 }

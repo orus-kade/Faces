@@ -48,9 +48,11 @@ def add_person():
     if request.method == "POST" and form.validate():
         first_name = request.form['first_name']
         second_name = request.form['second_name']
-        file_storage = request.files['photo']
-        file_storage.save('temp_photos/{}'.format(file_storage.filename))
-        file_storage.close()
+        b64_string = request.form['photo_hidden']
+        image_data = bytes(b64_string, encoding="ascii")
+        # TODO добавить идентификатор для файла
+        with open("temp_photos/imageToSave.jpg", "wb") as fh:
+            fh.write(base64.decodebytes(image_data))
         embedding = Embeddings(first_name=first_name, second_name=second_name)
         try:
             db.session.add(embedding)
@@ -100,9 +102,7 @@ def cam_func():
     if request.method == "POST":
         b64_string = request.form['cam_photo']
         image_data = bytes(b64_string, encoding="ascii")
-        # im = Image.open(BytesIO(base64.b64decode(image_data)))
-        # im.save('temp_photos/imageToSave.jpg')
-
+        # TODO добавить идентификатор для файла
         with open("temp_photos/imageToSave.jpg", "wb") as fh:
             fh.write(base64.decodebytes(image_data))
     return render_template("webcam_exp.html")

@@ -5,18 +5,18 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="shortcut icon" type="image/x-icon" href="static/img/ico.png"css >
+    <link rel="shortcut icon" type="image/x-icon" href="/static/img/ico.png"css >
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{url_for('static', filename='css/main.css')}}">
     <title>{% block title%}{% endblock %}</title>
 </head>
 <body>
-    <nav class="site-header sticky-top py-1">
+    <nav class="site-header sticky-top py-1" id="header_bar">
       <div class="container d-flex flex-column flex-md-row justify-content-between">
-          <a class="p-2 text-dark" href="/home">Главная</a>
-          <a class="p-2 text-dark" href="/person/add">Добавление человека</a>
-          <a class="p-2 text-dark" href="/person/saved">Сохраненные люди</a>
-          <a class="p-2 text-dark" href="/about">О проекте</a>
+          <a class="p-2 text-dark" href="/home" id="my_link">Главная</a>
+          <a class="p-2 text-dark" href="/person/add" id="my_link">Добавление человека</a>
+          <a class="p-2 text-dark" href="/person/saved" id="my_link">Сохраненные люди</a>
+          <a class="p-2 text-dark" href="/about" id="my_link">О проекте</a>
       </div>
     </nav>
     {% block body%}{% endblock %}
