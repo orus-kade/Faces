@@ -35,7 +35,7 @@
         <input type="button" id="camera_access" value="Получить доступ к камере" onClick="setup()" class="btn btn-primary"><br>
         <div id="my_camera"></div><br>
         <input type="button" id="take_snap" value="Сделать снимок" onClick="take_snapshot()" style="display:none" class="btn btn-primary"><br>
-        <div id="results">Ваше фото появится тут...</div><br>
+        <div id="results" style="display:none"></div><br>
         <input type="submit" id="button" value="Отправить" disabled="disabled" class="btn btn-success"><br>
     </form>
 </div>
@@ -48,6 +48,7 @@
                     document.getElementById('results').innerHTML =
                         '<h2>Ваше изображение:</h2>' +
                         '<img src="'+e.target.result+'" class="img-fluid rounded mx-auto d-block"/>';
+                    document.getElementById('results').style = "";
                     var raw_image_data =  e.target.result.replace(/^data\:image\/\w+\;base64\,/, '');
                     document.getElementById('photo_hidden').value = raw_image_data;
                     document.getElementById('button').disabled = false;
@@ -69,6 +70,7 @@
                     var raw_image_data = data_uri.replace(/^data\:image\/\w+\;base64\,/, '');
                     document.getElementById('photo_hidden').value = raw_image_data;
                     document.getElementById('button').disabled = false;
+                    document.getElementById('results').style = "";
                     document.getElementById('results').innerHTML =
                         '<h2>Ваше изображение:</h2>' +
                         '<img src="'+data_uri+'" class="img-fluid rounded mx-auto d-block"/>';
