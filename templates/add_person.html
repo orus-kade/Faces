@@ -19,13 +19,17 @@
 	</script>
 <div class="container mt-5">
     <h1>Добавление человека</h1>
+<!--    если изображение не добавлено, конпка отправить не активна -->
+<!--    этот код выводил сообщение, что изображения не добавлено. когда кнопка была всегда активна -->
+<!--    {% if form.photo_hidden.errors|length > 0 %}-->
+<!--    <div class="alert aalert-danger" role="alert">-->
+<!--        Изображение не добавлено!!!-->
+<!--    </div>-->
+<!--    {% endif%}-->
     <form method="post" enctype="multipart/form-data">
         {{ form.first_name(class_="form-control", placeholder="Введите имя") }}<br>
         {{ form.second_name(placeholder="Введите фамилию", class_="form-control") }}<br>
         {{ form.photo_hidden() }}<br>
-        {% if form.photo_hidden.errors|length > 0 %}
-            <p>Изображение не добавлено!!!</p><br>
-        {% endif%}
         <h3>Загрузите фотографию или сделайте снимок с вебкамеры</h3>
         <input type="file" id="'photo" name="photo" onchange="handleFiles(this.files)" class="form-control-file"><br>
         <input type="button" id="camera_access" value="Получить доступ к камере" onClick="setup()" class="btn btn-primary"><br>
