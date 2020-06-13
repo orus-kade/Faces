@@ -22,7 +22,7 @@
 <!--    если изображение не добавлено, конпка отправить не активна -->
 <!--    этот код выводил сообщение, что изображения не добавлено. когда кнопка была всегда активна -->
 <!--    {% if form.photo_hidden.errors|length > 0 %}-->
-<!--    <div class="alert aalert-danger" role="alert">-->
+<!--    <div class="alert alert-danger" role="alert">-->
 <!--        Изображение не добавлено!!!-->
 <!--    </div>-->
 <!--    {% endif%}-->
@@ -35,7 +35,7 @@
         <input type="button" id="camera_access" value="Получить доступ к камере" onClick="setup()" class="btn btn-primary"><br>
         <div id="my_camera"></div><br>
         <input type="button" id="take_snap" value="Сделать снимок" onClick="take_snapshot()" style="display:none" class="btn btn-primary"><br>
-        <div id="results">Your image will appear here...</div><br>
+        <div id="results">Ваше фото появится тут...</div><br>
         <input type="submit" id="button" value="Отправить" disabled="disabled" class="btn btn-success"><br>
     </form>
 </div>
