@@ -21,11 +21,19 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///face.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+# embedding_model = None
+# age_model = None
+# gender_model = None
+# person_model = None
+#
+# def load_models():
+#     global embedding_model, age_model, gender_model, person_model
+#     embedding_model = load_model('./neural_networks/models/BASE_MODEL.h5')
+#     age_model = load_model('./neural_networks/models/AGE_PART.h5')
+#     gender_model = load_model('./neural_networks/models/FEMALE_MALE_PART.h5')
+#     person_model = load_model('./neural_networks/models/PERSONALITY_PART.h5')
 
-embedding_model = load_model('./neural_networks/models/BASE_MODEL.h5')
-age_model = load_model('./neural_networks/models/AGE_PART.h5')
-gender_model = load_model('./neural_networks/models/FEMALE_MALE_PART.h5')
-person_model = load_model('./neural_networks/models/PERSONALITY_PART.h5')
+
 
 class Embeddings(db.Model):
     __tablename__ = 'embeddings'
@@ -54,15 +62,19 @@ def index():
         img = Image.open(BytesIO(base64.b64decode(b64_string)))
         faces = crop_rectangle(np.array(img))
         if faces is not None:
+
+            embedding_model = load_model('./neural_networks/models/BASE_MODEL.h5')
+            age_model = load_model('./neural_networks/models/AGE_PART.h5')
+            gender_model = load_model('./neural_networks/models/FEMALE_MALE_PART.h5')
+            person_model = load_model('./neural_networks/models/PERSONALITY_PART.h5')
+
             img = np.array(faces) / 255
             embedding = do_embedding(embedding_model, [img])
             age = predict_age(age_model, embedding)
             gender = predict_gender(gender_model, embedding)
             person_embedding = predict_person(person_model, embedding)
-            write_annoy(person_embedding)
-            annoy_index = []
-            for pe in person_embedding:
-                annoy_index.append(read_annoy(pe))
+            write_annoy(person_embedding, [i for i in range(len(person_embedding))])
+            annoy_index = read_annoy(person_embedding)
 
             images_base64 = []
             for image in img:
@@ -155,6 +167,7 @@ def cam_func():
 
 
 if __name__ == "__main__":
+
     app.run(debug=True)
 
 
