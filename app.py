@@ -2,6 +2,10 @@ from flask import Flask, render_template, url_for, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 import forms
 from datetime import datetime
+import base64
+from io import BytesIO
+from PIL import Image
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///face.db'
@@ -82,6 +86,18 @@ def edit_person(id):
             return "При редактировании данных произошла ошибка"
     else:
         return render_template("edit_person.html", person=person, edited=False)
+
+@app.route('/cam', methods=['POST', 'GET'])
+def cam_func():
+    if request.method == "POST":
+        b64_string = request.form['cam_photo']
+        image_data = bytes(b64_string, encoding="ascii")
+        # im = Image.open(BytesIO(base64.b64decode(image_data)))
+        # im.save('temp_photos/imageToSave.jpg')
+
+        with open("temp_photos/imageToSave.jpg", "wb") as fh:
+            fh.write(base64.decodebytes(image_data))
+    return render_template("webcam_exp.html")
 
 # @app.route('/user/<string:name>/<int:id>')
 # def user(name, id):
