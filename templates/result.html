@@ -11,13 +11,22 @@
     {% if persons|length == 0%}
     <p>На фотограции лиц не найдено</p>
     {% else %}
+    <p>Найдено лиц: {{ persons|length }}</p>
      <ul class="list-group">
     {% for person in persons%}
          <li class="list-group-item">
-            <img src="{{ person[0] }}">
-            {{ person[1] }}
-            {{ person[2] }}
-            {{ person[3] }}
+             <div class="media">
+                 <img src="{{ person[0] }}" class="d-flex mr-3">
+                 <div class="media-body">
+                     <p>Возраст: {{ person[1][0] }}</p>
+                     {% if person[2] == 0 %}
+                     <p>Пол: женский </p>
+                     {% else %}
+                     <p>Пол: мужской </p>
+                     {% endif %}
+                     <p>annoy_index: {{ person[3][0] }}</p>
+                 </div>
+             </div>
          </li>
     {% endfor %}
      </ul>

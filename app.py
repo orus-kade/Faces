@@ -11,7 +11,7 @@ from neural_networks.predict_person import predict_person
 from neural_networks.write_annoy import write_annoy
 from neural_networks.read_annoy import read_annoy
 from work_with_cam.crop_rectangle import crop_rectangle
-from keras.models import load_model
+from tensorflow.keras.models import load_model
 
 from datetime import datetime
 import base64
@@ -49,7 +49,7 @@ class Embeddings(db.Model):
         return '<Embeddings %r>' % self.id
 
 
-@app.route('/')
+@app.route('/', methods=['POST', 'GET'])
 @app.route('/home', methods=['POST', 'GET'])
 def index():
     if request.method == "POST":
@@ -85,11 +85,9 @@ def index():
                 img_str = 'data:image/jpeg;base64,' + img_str
                 images_base64.append(img_str)
 
-            print(len(images_base64), len(age), len(gender), len(annoy_index))
             persons = []
             for img, a, g, ai in zip(images_base64, age, gender, annoy_index):
                 persons.append([img, a, g, ai])
-            print(len(persons))
             return render_template("result.html", persons=persons)
         return render_template("result.html", persons=[])
     return render_template("index.html")
