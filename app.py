@@ -3,8 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 import forms
 from datetime import datetime
 import base64
-from io import BytesIO
-from PIL import Image
 
 
 app = Flask(__name__)
