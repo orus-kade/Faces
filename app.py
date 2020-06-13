@@ -28,17 +28,17 @@ class Embeddings(db.Model):
 @app.route('/')
 @app.route('/home', methods=['POST', 'GET'])
 def index():
-    return render_template("index.html")
-
-
-@app.route('/about')
-def about():
     if request.method == "POST":
         b64_string = request.form['cam_photo']
         image_data = bytes(b64_string, encoding="ascii")
         # TODO добавить идентификатор для файла
         with open("temp_photos/imageToSave.jpg", "wb") as fh:
             fh.write(base64.decodebytes(image_data))
+    return render_template("index.html")
+
+
+@app.route('/about')
+def about():
     return render_template("about.html")
 
 
@@ -106,11 +106,6 @@ def cam_func():
         with open("temp_photos/imageToSave.jpg", "wb") as fh:
             fh.write(base64.decodebytes(image_data))
     return render_template("webcam_exp.html")
-
-
-# @app.route('/user/<string:name>/<int:id>')
-# def user(name, id):
-#     return "User page " + name + " - " + str(id)
 
 
 if __name__ == "__main__":
