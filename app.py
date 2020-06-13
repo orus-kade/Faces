@@ -1,6 +1,18 @@
 from flask import Flask, render_template, url_for, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 import forms
+from io import BytesIO
+from PIL import Image
+import numpy as np
+from neural_networks.do_embedding import do_embedding
+from neural_networks.predict_age import predict_age
+from neural_networks.predict_gender import predict_gender
+from neural_networks.predict_person import predict_person
+from neural_networks.write_annoy import write_annoy
+from neural_networks.read_annoy import read_annoy
+from work_with_cam.crop_rectangle import crop_rectangle
+from keras.models import load_model
+
 from datetime import datetime
 import base64
 
@@ -10,6 +22,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 
+embedding_model = load_model('./neural_networks/models/BASE_MODEL.h5')
+age_model = load_model('./neural_networks/models/AGE_PART.h5')
+gender_model = load_model('./neural_networks/models/FEMALE_MALE_PART.h5')
+person_model = load_model('./neural_networks/models/PERSONALITY_PART.h5')
+
 class Embeddings(db.Model):
     __tablename__ = 'embeddings'
     __table_args__ = {'extend_existing': True}
@@ -17,7 +34,6 @@ class Embeddings(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     first_name = db.Column(db.String(100), nullable=False)
     second_name = db.Column(db.String(100), nullable=False)
-
     # person_embedding = db.Column(db.Text, nullable=False)
     # data_add = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -30,10 +46,40 @@ class Embeddings(db.Model):
 def index():
     if request.method == "POST":
         b64_string = request.form['cam_photo']
-        image_data = bytes(b64_string, encoding="ascii")
-        # TODO добавить идентификатор для файла
-        with open("temp_photos/imageToSave.jpg", "wb") as fh:
-            fh.write(base64.decodebytes(image_data))
+        # image_data = bytes(b64_string, encoding="ascii")
+        # добавить идентификатор для файла
+        # with open("temp_photos/imageToSave.jpg", "wb") as fh:
+        #     fh.write(base64.decodebytes(image_data))
+
+        img = Image.open(BytesIO(base64.b64decode(b64_string)))
+        faces = crop_rectangle(np.array(img))
+        if faces is not None:
+            img = np.array(faces) / 255
+            embedding = do_embedding(embedding_model, [img])
+            age = predict_age(age_model, embedding)
+            gender = predict_gender(gender_model, embedding)
+            person_embedding = predict_person(person_model, embedding)
+            write_annoy(person_embedding)
+            annoy_index = []
+            for pe in person_embedding:
+                annoy_index.append(read_annoy(pe))
+
+            images_base64 = []
+            for image in img:
+                buffered = BytesIO()
+                image = image * 255
+                Image.fromarray(image.astype(np.uint8)).save(buffered, format="JPEG", mode="RGB")
+                img_str = str(base64.b64encode(buffered.getvalue()))[2:-1]
+                img_str = 'data:image/jpeg;base64,' + img_str
+                images_base64.append(img_str)
+
+            print(len(images_base64), len(age), len(gender), len(annoy_index))
+            persons = []
+            for img, a, g, ai in zip(images_base64, age, gender, annoy_index):
+                persons.append([img, a, g, ai])
+            print(len(persons))
+            return render_template("result.html", persons=persons)
+        return "Лиц нет"
     return render_template("index.html")
 
 
@@ -110,3 +156,37 @@ def cam_func():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+# -------------------------------------
+
+    # from skimage import io
+    #
+    #
+    # img = io.imread("./temp_photos/57835.jpg")
+    # faces = crop_rectangle(img)
+    # if faces is not None:
+    #     img = faces[0] / 255
+    #
+    # embedding = do_embedding(np.array([img]))
+    # age = predict_age(embedding)[0][0]
+    # gender = predict_gender(embedding)[0][0]
+    #
+    # person_embedding = predict_person(embedding)[0]
+    # write_annoy([person_embedding*2, person_embedding*0.8])
+    # annoy_index = read_annoy(person_embedding)[0]
+    #
+    # if gender < 0.5:
+    #     gender = "женский"
+    # else:
+    #     gender = "мужской"
+    #
+    # print("Возраст: ", age)
+    # print("Пол: ", gender)
+    # print("Индекс ближайшего в базе: ", annoy_index)
+    # # print(person_embedding)
+    #
+    # import matplotlib.pyplot as plt
+    # plt.imshow(img)
+    # plt.show()
+    # app.run(debug=True)

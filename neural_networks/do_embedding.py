@@ -1,3 +1,3 @@
-def do_embedding(nearly_embedding):
-    embedding = [1, 3, 5, 6]
+def do_embedding(embedding_model, face):
+    embedding = embedding_model.predict(face)
     return embedding
