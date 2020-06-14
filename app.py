@@ -27,12 +27,14 @@ age_model = None
 gender_model = None
 person_model = None
 
+
 def load_models():
     global embedding_model, age_model, gender_model, person_model
     embedding_model = load_model('./neural_networks/models/BASE_MODEL.h5')
     age_model = load_model('./neural_networks/models/AGE_PART.h5')
     gender_model = load_model('./neural_networks/models/FEMALE_MALE_PART.h5')
     person_model = load_model('./neural_networks/models/PERSONALITY_PART.h5')
+
 
 class Embeddings(db.Model):
     __tablename__ = 'embeddings'
@@ -46,6 +48,7 @@ class Embeddings(db.Model):
 
     def __repr__(self):
         return '<Embeddings %r>' % self.id
+
 
 @app.route('/', methods=['POST', 'GET'])
 @app.route('/home', methods=['POST', 'GET'])
@@ -152,28 +155,43 @@ def delete_person(id):
 
 @app.route('/person/edit/<int:id>', methods=['POST', 'GET'])
 def edit_person(id):
+    print(id)
     person = Embeddings.query.get_or_404(id)
     if request.method == "POST":
         person.first_name = request.form['first_name']
         person.second_name = request.form['second_name']
-        try:
-            db.session.commit()
-            return render_template("edit_person.html", person=person, edited=True)
-        except:
-            return "При редактировании данных произошла ошибка"
+        if len(request.form['photo_hidden']) == 0:
+            try:
+                db.session.commit()
+                return render_template("edit_person.html", person=person, edited=True, photo_err=False, photo_edit=False)
+            except:
+                return "При редактировании данных произошла ошибка"
+        else:
+            b64_string = request.form['photo_hidden']
+            img = Image.open(BytesIO(base64.b64decode(b64_string)))
+            faces = crop_rectangle(np.array(img))
+            if faces is not None and len(faces) == 1:
+                img = np.array(faces) / 255
+                embedding = do_embedding(embedding_model, [img])
+                person_embedding = predict_person(person_model, embedding)[0]
+                person.person_embedding = json.dumps(person_embedding.tolist())
+                try:
+                    db.session.commit()
+                    persons = Embeddings.query.order_by(Embeddings.second_name).all()
+                    emb_arr = []
+                    index_arr = []
+                    for p in persons:
+                        emb_arr.append(json.loads(p.person_embedding))
+                        index_arr.append(p.id)
+                    write_annoy(emb_arr, index_arr)
+                    return render_template("edit_person.html", person=person, edited=True, photo_err=False, photo_edit=True)
+                except:
+                    return "При добавлении человека произошла ошибка"
+            else:
+                return render_template("edit_person.html", person=person, edited=False, photo_err=True, photo_edit=False)
     else:
-        return render_template("edit_person.html", person=person, edited=False)
+        return render_template("edit_person.html", person=person, edited=False, photo_err=False, photo_edit=False)
 
-# Можно убрать, было для тестов
-@app.route('/cam', methods=['POST', 'GET'])
-def cam_func():
-    if request.method == "POST":
-        b64_string = request.form['cam_photo']
-        image_data = bytes(b64_string, encoding="ascii")
-        # TODO добавить идентификатор для файла
-        with open("temp_photos/imageToSave.jpg", "wb") as fh:
-            fh.write(base64.decodebytes(image_data))
-    return render_template("webcam_exp.html")
 
 
 if __name__ == "__main__":
@@ -182,35 +200,3 @@ if __name__ == "__main__":
     # db.create_all()
 
 
-# -------------------------------------
-
-    # from skimage import io
-    #
-    #
-    # img = io.imread("./temp_photos/57835.jpg")
-    # faces = crop_rectangle(img)
-    # if faces is not None:
-    #     img = faces[0] / 255
-    #
-    # embedding = do_embedding(np.array([img]))
-    # age = predict_age(embedding)[0][0]
-    # gender = predict_gender(embedding)[0][0]
-    #
-    # person_embedding = predict_person(embedding)[0]
-    # write_annoy([person_embedding*2, person_embedding*0.8])
-    # annoy_index = read_annoy(person_embedding)[0]
-    #
-    # if gender < 0.5:
-    #     gender = "женский"
-    # else:
-    #     gender = "мужской"
-    #
-    # print("Возраст: ", age)
-    # print("Пол: ", gender)
-    # print("Индекс ближайшего в базе: ", annoy_index)
-    # # print(person_embedding)
-    #
-    # import matplotlib.pyplot as plt
-    # plt.imshow(img)
-    # plt.show()
-    # app.run(debug=True)
