@@ -37,7 +37,7 @@
                 reader.onload = function (e) {
                     document.getElementById('results').innerHTML =
                         '<h2>Ваше изображение:</h2>' +
-                        '<img src="'+e.target.result+'" class="img-fluid rounded mx-auto d-block"/>';
+                        '<img src="'+e.target.result+'" class="img-fluid rounded mx-auto d-block" id="image_block"/>';
                     document.getElementById('results').style = "";
                     var raw_image_data =  e.target.result.replace(/^data\:image\/\w+\;base64\,/, '');
                     document.getElementById('cam_photo').value = raw_image_data;
@@ -63,7 +63,7 @@
                     document.getElementById('results').style = "";
                     document.getElementById('results').innerHTML =
                         '<h2>Ваше изображение:</h2>' +
-                        '<img src="'+data_uri+'" class="img-fluid rounded mx-auto d-block"/>';
+                        '<img src="'+data_uri+'" class="img-fluid rounded mx-auto d-block" id="image_block"/>';
                 } );
             }
     </script>

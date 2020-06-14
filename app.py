@@ -114,7 +114,6 @@ def add_person():
                 for person in persons:
                     emb_arr.append(json.loads(person.person_embedding))
                     index_arr.append(person.id)
-                print(index_arr)
                 write_annoy(emb_arr, index_arr)
                 return redirect("/person/saved?added=True")
             except:
@@ -145,7 +144,6 @@ def delete_person(id):
         for person in persons:
             emb_arr.append(json.loads(person.person_embedding))
             index_arr.append(person.id)
-        print(index_arr)
         write_annoy(emb_arr, index_arr)
         return redirect("/person/saved?deleted=True")
     except:
