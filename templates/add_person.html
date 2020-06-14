@@ -26,6 +26,11 @@
 <!--        Изображение не добавлено!!!-->
 <!--    </div>-->
 <!--    {% endif%}-->
+    {% if photo_error %}
+    <div class="alert alert-danger" role="alert">
+        На фото не найдено лиц или лиц найдено несколько!!!
+    </div>
+    {% endif%}
     <form method="post" enctype="multipart/form-data">
         {{ form.first_name(class_="form-control", placeholder="Введите имя") }}<br>
         {{ form.second_name(placeholder="Введите фамилию", class_="form-control") }}<br>

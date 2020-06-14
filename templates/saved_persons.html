@@ -12,6 +12,11 @@
         Запись удалена!
     </div>
     {% endif %}
+    {% if added %}
+    <div class="alert alert-success" role="alert">
+        Запись добавлена!
+    </div>
+    {% endif %}
     {% if persons|length >0 %}
         <ul class="list-group">
             {% for person in persons %}

@@ -12,28 +12,27 @@ from neural_networks.write_annoy import write_annoy
 from neural_networks.read_annoy import read_annoy
 from work_with_cam.crop_rectangle import crop_rectangle
 from tensorflow.keras.models import load_model
-
-from datetime import datetime
+import json
 import base64
+from datetime import datetime
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///face.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# embedding_model = None
-# age_model = None
-# gender_model = None
-# person_model = None
-#
-# def load_models():
-#     global embedding_model, age_model, gender_model, person_model
-#     embedding_model = load_model('./neural_networks/models/BASE_MODEL.h5')
-#     age_model = load_model('./neural_networks/models/AGE_PART.h5')
-#     gender_model = load_model('./neural_networks/models/FEMALE_MALE_PART.h5')
-#     person_model = load_model('./neural_networks/models/PERSONALITY_PART.h5')
+embedding_model = None
+age_model = None
+gender_model = None
+person_model = None
 
-
+def load_models():
+    global embedding_model, age_model, gender_model, person_model
+    embedding_model = load_model('./neural_networks/models/BASE_MODEL.h5')
+    age_model = load_model('./neural_networks/models/AGE_PART.h5')
+    gender_model = load_model('./neural_networks/models/FEMALE_MALE_PART.h5')
+    person_model = load_model('./neural_networks/models/PERSONALITY_PART.h5')
 
 class Embeddings(db.Model):
     __tablename__ = 'embeddings'
@@ -42,40 +41,34 @@ class Embeddings(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     first_name = db.Column(db.String(100), nullable=False)
     second_name = db.Column(db.String(100), nullable=False)
-    # person_embedding = db.Column(db.Text, nullable=False)
+    person_embedding = db.Column(db.Text, nullable=False)
     # data_add = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return '<Embeddings %r>' % self.id
-
 
 @app.route('/', methods=['POST', 'GET'])
 @app.route('/home', methods=['POST', 'GET'])
 def index():
     if request.method == "POST":
         b64_string = request.form['cam_photo']
-        # image_data = bytes(b64_string, encoding="ascii")
-        # добавить идентификатор для файла
-        # with open("temp_photos/imageToSave.jpg", "wb") as fh:
-        #     fh.write(base64.decodebytes(image_data))
-
         img = Image.open(BytesIO(base64.b64decode(b64_string)))
         faces = crop_rectangle(np.array(img))
         if faces is not None:
-
-            embedding_model = load_model('./neural_networks/models/BASE_MODEL.h5')
-            age_model = load_model('./neural_networks/models/AGE_PART.h5')
-            gender_model = load_model('./neural_networks/models/FEMALE_MALE_PART.h5')
-            person_model = load_model('./neural_networks/models/PERSONALITY_PART.h5')
-
             img = np.array(faces) / 255
             embedding = do_embedding(embedding_model, [img])
             age = predict_age(age_model, embedding)
             gender = predict_gender(gender_model, embedding)
             person_embedding = predict_person(person_model, embedding)
-            write_annoy(person_embedding, [i for i in range(len(person_embedding))])
             annoy_index = read_annoy(person_embedding)
-
+            annoy_index_name = []
+            for index in annoy_index:
+                try:
+                    person = Embeddings.query.get(index[0])
+                    annoy_index_name.append(person.first_name + ' ' + person.second_name)
+                except:
+                    print("Ошибка при поиске соответствия")
+                    annoy_index_name.append(-1)
             images_base64 = []
             for image in img:
                 buffered = BytesIO()
@@ -84,9 +77,8 @@ def index():
                 img_str = str(base64.b64encode(buffered.getvalue()))[2:-1]
                 img_str = 'data:image/jpeg;base64,' + img_str
                 images_base64.append(img_str)
-
             persons = []
-            for img, a, g, ai in zip(images_base64, age, gender, annoy_index):
+            for img, a, g, ai in zip(images_base64, age, gender, annoy_index_name):
                 persons.append([img, a, g, ai])
             return render_template("result.html", persons=persons)
         return render_template("result.html", persons=[])
@@ -102,29 +94,43 @@ def about():
 def add_person():
     form = forms.AddPersonForm(request.form, meta={'csrf': False})
     if request.method == "POST" and form.validate():
-        first_name = request.form['first_name']
-        second_name = request.form['second_name']
         b64_string = request.form['photo_hidden']
-        image_data = bytes(b64_string, encoding="ascii")
-        # TODO добавить идентификатор для файла
-        with open("temp_photos/imageToSave.jpg", "wb") as fh:
-            fh.write(base64.decodebytes(image_data))
-        embedding = Embeddings(first_name=first_name, second_name=second_name)
-        try:
-            db.session.add(embedding)
-            db.session.commit()
-            return redirect("/person/saved")
-        except:
-            return "При добавлении человека произошла ошибка"
+        img = Image.open(BytesIO(base64.b64decode(b64_string)))
+        faces = crop_rectangle(np.array(img))
+        if faces is not None and len(faces) == 1:
+            img = np.array(faces) / 255
+            embedding = do_embedding(embedding_model, [img])
+            person_embedding = predict_person(person_model, embedding)[0]
+            first_name = request.form['first_name']
+            second_name = request.form['second_name']
+            person_embedding = json.dumps(person_embedding.tolist())
+            person = Embeddings(first_name=first_name, second_name=second_name, person_embedding=person_embedding)
+            try:
+                db.session.add(person)
+                db.session.commit()
+                persons = Embeddings.query.order_by(Embeddings.second_name).all()
+                emb_arr = []
+                index_arr = []
+                for person in persons:
+                    emb_arr.append(json.loads(person.person_embedding))
+                    index_arr.append(person.id)
+                print(index_arr)
+                write_annoy(emb_arr, index_arr)
+                return redirect("/person/saved?added=True")
+            except:
+                return "При добавлении человека произошла ошибка"
+        else:
+            return render_template("add_person.html", form=form, photo_error=True)
     else:
-        return render_template("add_person.html", form=form)
+        return render_template("add_person.html", form=form, photo_error=False)
 
 
 @app.route('/person/saved')
 def saved_persons():
     deleted = request.args.get('deleted', default=False, type=bool)
+    added = request.args.get('added', default=False, type=bool)
     persons = Embeddings.query.order_by(Embeddings.second_name).all()
-    return render_template("saved_persons.html", persons=persons, deleted=deleted)
+    return render_template("saved_persons.html", persons=persons, deleted=deleted, added=added)
 
 
 @app.route('/person/delete/<int:id>')
@@ -133,6 +139,14 @@ def delete_person(id):
     try:
         db.session.delete(person)
         db.session.commit()
+        persons = Embeddings.query.order_by(Embeddings.second_name).all()
+        emb_arr = []
+        index_arr = []
+        for person in persons:
+            emb_arr.append(json.loads(person.person_embedding))
+            index_arr.append(person.id)
+        print(index_arr)
+        write_annoy(emb_arr, index_arr)
         return redirect("/person/saved?deleted=True")
     except:
         return "При удалении произошла ошибка!"
@@ -165,8 +179,9 @@ def cam_func():
 
 
 if __name__ == "__main__":
-
+    load_models()
     app.run(debug=True)
+    # db.create_all()
 
 
 # -------------------------------------

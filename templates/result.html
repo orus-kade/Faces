@@ -24,7 +24,11 @@
                      {% else %}
                      <p>Пол: мужской </p>
                      {% endif %}
-                     <p>annoy_index: {{ person[3][0] }}</p>
+                     {% if person[3] == -1 %}
+                     <p>Человек в базе не найден</p>
+                     {% else %}
+                     <p>Имя: {{ person[3] }}</p>
+                     {% endif %}
                  </div>
              </div>
          </li>
